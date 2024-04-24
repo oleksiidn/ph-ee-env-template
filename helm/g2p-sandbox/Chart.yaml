@@ -46,6 +46,11 @@ dependencies:
   repository: "file://../ph-ee-engine/connector-channel"
   condition: "channel.enabled"
 
+- name: operations_app
+  version: 1.0.0
+  repository: "file://../ph-ee-engine/operations-app"
+  condition: "operations_app.enabled"
+
 - name: vouchers
   version: 1.0.0
   repository: "file://../ph-ee-engine/vouchers"
