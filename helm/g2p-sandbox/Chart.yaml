@@ -41,6 +41,11 @@ dependencies:
   repository: "file://../ph-ee-engine/connector-mock-payment-schema"
   condition: "mockpayment.enabled"
 
+- name: channel
+  version: 1.0.0
+  repository: "file://../ph-ee-engine/connector-channel"
+  condition: "channel.enabled"
+
 - name: vouchers
   version: 1.0.0
   repository: "file://../ph-ee-engine/vouchers"
