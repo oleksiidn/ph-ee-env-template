@@ -1,85 +1,199 @@
-ph-ee-engine:
+global:
+  SPRING_PROFILES_ACTIVE: "bb"
+  imagePullPolicy: "Always"
+  LOGGING_LEVEL_ROOT: "INFO"
+  LOGGING_PATTERN_CONSOLE: "%d{dd-MM-yyyy HH:mm:ss.SSS} %magenta([%thread]) %highlight(%-5level) %logger.%M - %msg%n"
+  tenants: "rhino,gorilla,wakanda,pluto,venus,jupiter"
+  DFSPIDS: "wakanda,pluto,venus,jupiter"
+  bucket_name: paymenthub-ee
+  region: "ap-south-1"
+  s3BaseUrl: "http://minio:9000"
+  max_execution_threads: 50
+  poll_interval: 10
+
+ingress:
+  apiversion: "networking.k8s.io/v1"
+
+deployment:
+  apiversion: "apps/v1"
+
+service:
+  apiversion: "v1"
+
+secret:
+  apiversion: "v1"
+
+configmap:
+  apiversion: "v1"
+
+zeebe_ops:
+  enabled: true
+  image: docker.io/openmf/ph-ee-zeebe-ops:v1.2.0
+  global:
+    elasticsearch:
+      host: "ph-ee-elasticsearch"
+      clusterName: "ph-ee-elasticsearch"
   ingress:
-    apiversion: "networking.k8s.io/v1"
+    enabled: false
+    annotations:
+      kubernetes.io/ingress.class: nginx
+    path: /
+    host: operate.sandbox.mifos.io
+    tls:
+      enabled: true
+    backend: { }
+  replicas: 1
+  imagePullPolicy: "Always"
+  imagePullSecrets: []
+  elasticsearch_contactpoint: "ph-ee-elasticsearch:9200"
+  elasticsearch_url: "http://ph-ee-elasticsearch:9200/"
+  elasticsearch_sslverification: false
+  elasticsearch_security_enabled: false
+  livenessProbe:
+    httpGet:
+      path: /actuator/health/liveness
+      port: 9191
+    initialDelaySeconds: 120
+    periodSeconds: 30
+    failureThreshold: 3
+    timeoutSeconds: 5
+  readinessProbe:
+    httpGet:
+      path: /actuator/health/readiness
+      port: 9191
+    initialDelaySeconds: 120
+    periodSeconds: 30
+    failureThreshold: 3
+    timeoutSeconds: 5
+  # Whether this chart should self-manage its service account, role, and associated role binding.
+  managedServiceAccount: true
+  # Custom service account override that the pod will use
+  serviceAccount: ""
+  # Annotations to add to the ServiceAccount that is created if the serviceAccount value isn't set.
+  serviceAccountAnnotations: {}
+  # How long to wait for Zeebe-ops pods to stop gracefully
+  terminationGracePeriod: 30
+  # Extra environment variables for Zeebe-ops container.
+  envFrom: []
+  # - configMapRef:
+  #     name: config-secret
+  extraEnvs: []
+  # This is the PriorityClass settings as defined in
+  # https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/#priorityclass
+  priorityClassName: ""
+  # ph-ee-zeebe-opsConfig: ""
+  #   ph-ee-zeebe-ops.yml: |
+  # - User that the container will execute as.
+  # Not necessary to run as root (0) as the Zeebe-ops Deployment use cases do not need access to Kubernetes Node internals
+  # - Typically not necessarily unless running within environments such as OpenShift.
+  securityContext:
+    runAsUser: 0
+    privileged: false
+  resources:
+    limits:
+      memory: "512M"
+      cpu: "500m"
+    requests:
+      memory: "512M"
+      cpu: "100m"
+  # Enabling this will publicly expose your zeebe_ops instance.
+  # Only enable this if you have security enabled on your cluster
 
   deployment:
-    apiversion: "apps/v1"
+    annotations: {}
+    affinity: {}
+    nodeSelector: {}
+    tolerations: []
+    envFrom: []
+    # - configMapRef:
+    #     name: config-secret
+    extraEnvs: []
+    # - User that the container will execute as.
+    # Not necessary to run as root (0) as the zeebeops Deployment use cases do not need access to Kubernetes Node internals
+    # - Typically not necessarily unless running within environments such as OpenShift.
+    securityContext:
+      runAsUser: 0
+      privileged: false
+    resources:
+      limits:
+        memory: "512M"
+        cpu: "500m"
+      requests:
+        memory: "512M"
+        cpu: "100m"
+    # Allows you to add any config files in /usr/share/
+    # such as zeebeops.yml for deployment
+    # ph-ee-zeebe-opsConfig: {}
+    #   ph-ee-zeebe-ops.yml: |
 
-  service:
-    apiversion: "v1"
-
-  secret:
-    apiversion: "v1"
-
-  configmap:
-    apiversion: "v1"
-
-  global:
-    SPRING_PROFILES_ACTIVE: "bb"
-    imagePullPolicy: "Always"
-    LOGGING_LEVEL_ROOT: "INFO"
-    LOGGING_PATTERN_CONSOLE: "%d{dd-MM-yyyy HH:mm:ss.SSS} %magenta([%thread]) %highlight(%-5level) %logger.%M - %msg%n"
-    tenants: "rhino,gorilla,wakanda,pluto,venus,jupiter"
-    DFSPIDS: "wakanda,pluto,venus,jupiter"
-
-  zeebe-operate-helm:
-    enabled: true
-    image:
-      repository: camunda/operate
-      tag: 1.1.0
-    global:
-      elasticsearch:
-        host: "ph-ee-elasticsearch"
-        clusterName: "ph-ee-elasticsearch"
-    ingress:
-      enabled: false
-      annotations: 
-        kubernetes.io/ingress.class: nginx      
-      path: /
-      host: operate.sandbox.mifos.io
-      tls:
-        enabled: true
-
-  elasticsearch:
-    enabled: true
-    #Single Node Solution
-    clusterHealthCheckParams: "wait_for_status=yellow&timeout=100s"
-    protocol: http
-    master:
-      readinessProbe:
-        httpGet:
-          allow-insecure: true
-          username: elastic
-          password: "{{ .Env.ELASTIC_PASSWORD }}"
-          path: /_cluster/health?wait_for_status=yellow&timeout=5s
-          port: 9200
-        initialDelaySeconds: 30
-    data:
-      readinessProbe:
-        httpGet:
-          allow-insecure: true
-          username: elastic
-          password: "{{ .Env.ELASTIC_PASSWORD }}"
-          path: /_cluster/health?wait_for_status=yellow&timeout=5s
-          port: 9200
-        initialDelaySeconds: 30
-    # Shrink default JVM heap.
-    esJavaOpts: "-Xmx512m -Xms512m"
-    # Allocate smaller chunks of memory per pod.
+elasticsearch:
+  enabled: true
+  #Single Node Solution
+  clusterHealthCheckParams: "wait_for_status=yellow&timeout=100s"
+  protocol: http
+  master:
+    readinessProbe:
+      httpGet:
+        allow-insecure: true
+        username: elastic
+        password: "{{ .Env.ELASTIC_PASSWORD }}"
+        path: /_cluster/health?wait_for_status=yellow&timeout=5s
+        port: 9200
+      initialDelaySeconds: 30
+  data:
+    readinessProbe:
+      httpGet:
+        allow-insecure: true
+        username: elastic
+        password: "{{ .Env.ELASTIC_PASSWORD }}"
+        path: /_cluster/health?wait_for_status=yellow&timeout=5s
+        port: 9200
+      initialDelaySeconds: 30
+  # Shrink default JVM heap.
+  esJavaOpts: "-Xmx512m -Xms512m"
+  # Allocate smaller chunks of memory per pod.
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "1024M"
+    limits:
+      cpu: "1000m"
+      memory: "1024M"
+  volumeClaimTemplate:
+    accessModes: [ "ReadWriteOnce" ]
+    storageClassName: "gp2"
     resources:
       requests:
-        cpu: "100m"
-        memory: "1024M"
-      limits:
-        cpu: "1000m"
-        memory: "1024M"
-    volumeClaimTemplate:
-      accessModes: [ "ReadWriteOnce" ]
-      storageClassName: "gp2"
-      resources:
-        requests:
-          storage: 10Gi
+        storage: 10Gi
 
+  # imageTag: 7.17.1
+  replicas: 1
+  fullnameOverride: "ph-ee-elasticsearch"
+  clusterName: "ph-ee-elasticsearch"
+  minimumMasterNodes: 1
+  esConfig:
+    elasticsearch.yml: |
+      xpack.security.enabled: false
+      xpack.security.transport.ssl.enabled: false
+      xpack.security.transport.ssl.verification_mode: certificate
+      xpack.security.transport.ssl.keystore.path: /usr/share/elasticsearch/config/certs/elastic-certificates.p12
+      xpack.security.transport.ssl.truststore.path: /usr/share/elasticsearch/config/certs/elastic-certificates.p12
+      xpack.security.http.ssl.enabled: false
+      xpack.security.http.ssl.truststore.path: /usr/share/elasticsearch/config/certs/elastic-certificates.p12
+      xpack.security.http.ssl.keystore.path: /usr/share/elasticsearch/config/certs/elastic-certificates.p12
+  secretMounts:
+    - name: elastic-certificates
+      secretName: elastic-certificates
+      path: /usr/share/elasticsearch/config/certs
+  extraEnvs:
+    - name: ELASTIC_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: elastic-credentials
+          key: password
+
+
+ph-ee-engine:
   kibana:
     enabled: true
     readinessProbe:
@@ -106,33 +220,7 @@ ph-ee-engine:
   operations:
     enabled: true
 
-  operationsmysql:
-    auth:
-      database: "tenants"
-      username: "mifos"
-      password: "password"
-      rootPassword: "ethieTieCh8ahv"
-    initdbScripts:
-      setup.sql: |-
-        CREATE DATABASE messagegateway;
-        CREATE DATABASE `rhino`;
-        CREATE DATABASE `gorilla`;
-        CREATE DATABASE `wakanda`;
-        CREATE DATABASE `identity_account_mapper`;
-        CREATE DATABASE `voucher_management`;
-        CREATE DATABASE `pluto`;
-        CREATE DATABASE `venus`;
-        CREATE DATABASE `jupiter`;
-        GRANT ALL PRIVILEGES ON `rhino`.* TO 'mifos';
-        GRANT ALL PRIVILEGES ON `gorilla`.* TO 'mifos';
-        GRANT ALL PRIVILEGES ON `wakanda`.* TO 'mifos';
-        GRANT ALL ON *.* TO 'root'@'%';
-        GRANT ALL PRIVILEGES ON messagegateway.* TO 'mifos';
-        GRANT ALL PRIVILEGES ON `identity_account_mapper`.* TO 'mifos';
-        GRANT ALL PRIVILEGES ON `voucher_management`.* TO 'mifos';
-        GRANT ALL PRIVILEGES ON `pluto`.* TO 'mifos';
-        GRANT ALL PRIVILEGES ON `venus`.* TO 'mifos';
-        GRANT ALL PRIVILEGES ON `jupiter`.* TO 'mifos';
+
 
 
   ph_ee_connector_ams_mifos:
@@ -357,40 +445,7 @@ ph-ee-engine:
       annotations:
         deployTime: "{{ .Values.deployTime }}"
 
-  connector_bulk:
-    enabled: true
-    image: docker.io/openmf/ph-ee-bulk-processor:v1.12.1
-    tenant: "rhino,gorilla"
-    hostname: bulk-connector.sandbox.mifos.io
-    operations_app:
-      contactpoint: "http://ph-ee-operations-app:80"
-      endpoints:
-        batch_transaction: "/api/v1/batch/transactions"
-    identity_account_mapper:
-      hostname: "http://ph-ee-identity-account-mapper:80"
-    service:
-      annotations:
-        konghq.com/protocol: "https"
-    ingress:
-      enabled: false
-      annotations:
-        konghq.com/plugins: cors
-        kubernetes.io/ingress.class: kong
-      tls:
-        - secretName: sandbox-secret
-      hosts:
-        - host: bulk-connector.sandbox.mifos.io     
-          paths: 
-          - path: "/"
-            backend:
-              service:
-                name: "ph-ee-connector-bulk"
-                port:
-                  number: 8443
-    deployment:
-      annotations:
-        deployTime: "{{ .Values.deployTime }}"
-        
+
   zeebe_ops:
     enabled: true
     image: docker.io/openmf/ph-ee-zeebe-ops:v1.4.0
@@ -645,5 +700,240 @@ account_mapper:
       url: jdbc:mysql:thin://operationsmysql:3306/identity_account_mapper
       username: mifos
       password: password
- 
-  
+
+camunda-platform:
+  connectors:
+    enabled: false
+  global:
+    zeebe: "{{ .Release.Name }}-zeebe"
+    elasticsearch:
+      disableExporter: true
+      host: "ph-ee-elasticsearch"
+    identity:
+      auth:
+        enabled: false
+
+vouchers:
+  enabled: true
+  paymentadvice: false
+  replicas: 1
+  image: docker.io/openmf/ph-ee-vouchers:v1.1.0
+  ingress:
+    enabled: true
+    annotations:
+      kubernetes.io/ingress.class: nginx
+    tls:
+      - secretName: sandbox-secret
+    hosts:
+      - host: vouchers.sandbox.mifos.io
+        paths:
+          - path: "/"
+            backend:
+              service:
+                name: ph-ee-vouchers
+                port:
+                  number: 80
+  deployment:
+    annotations:
+      deployTime: "{{ .Values.deployTime }}"
+  spring:
+    datasource:
+      url: jdbc:mysql://operationsmysql:3306/voucher_management
+      username: mifos
+      password: password
+  async:
+    core_pool_size: 10
+    max_pool_size: 10
+    queue_capacity: 100
+  expiry_time: 60
+  payer:
+    tenant: rhino
+    identifier: 12345678
+    identifierType: MSISDN
+  salting:
+    enabled: true
+  identity-account-mapper:
+    hostname: "https://ph-ee-identity-mapper:80"
+  operations:
+    hostname: "http://ph-ee-operations-app:80"
+    endpoints:
+      transfers: "/api/v1/transfers?size=1&page=0"
+
+
+operationsmysql:
+  fullnameOverride: "operationsmysql"
+  image:
+    tag: "5.7"
+    debug: false
+  volumeClaimTemplate:
+    storageClassName: "gp2"
+  auth:
+    database: "tenants"
+    username: "mifos"
+    password: "password"
+    rootPassword: "ethieTieCh8ahv"
+  initdbScripts:
+    setup.sql: |-
+      CREATE DATABASE messagegateway;
+      CREATE DATABASE `rhino`;
+      CREATE DATABASE `gorilla`;
+      CREATE DATABASE `wakanda`;
+      CREATE DATABASE `identity_account_mapper`;
+      CREATE DATABASE `voucher_management`;
+      CREATE DATABASE `pluto`;
+      CREATE DATABASE `venus`;
+      CREATE DATABASE `jupiter`;
+      GRANT ALL PRIVILEGES ON `rhino`.* TO 'mifos';
+      GRANT ALL PRIVILEGES ON `gorilla`.* TO 'mifos';
+      GRANT ALL PRIVILEGES ON `wakanda`.* TO 'mifos';
+      GRANT ALL ON *.* TO 'root'@'%';
+      GRANT ALL PRIVILEGES ON messagegateway.* TO 'mifos';
+      GRANT ALL PRIVILEGES ON `identity_account_mapper`.* TO 'mifos';
+      GRANT ALL PRIVILEGES ON `voucher_management`.* TO 'mifos';
+      GRANT ALL PRIVILEGES ON `pluto`.* TO 'mifos';
+      GRANT ALL PRIVILEGES ON `venus`.* TO 'mifos';
+      GRANT ALL PRIVILEGES ON `jupiter`.* TO 'mifos';
+
+connector_bulk:
+  enabled: true
+  image: docker.io/openmf/ph-ee-bulk-processor:v1.12.1
+  tenant: "rhino,gorilla"
+  hostname: bulk-connector.sandbox.mifos.io
+  operations_app:
+    contactpoint: "http://ph-ee-operations-app:80"
+    endpoints:
+      batch_transaction: "/api/v1/batch/transactions"
+  identity_account_mapper:
+    hostname: "http://ph-ee-identity-account-mapper:80"
+
+  ingress:
+    enabled: false
+    annotations:
+      konghq.com/plugins: cors
+      kubernetes.io/ingress.class: kong
+    tls:
+      - secretName: sandbox-secret
+    hosts:
+      - host: bulk-connector.sandbox.mifos.io
+        paths:
+          - path: "/"
+            backend:
+              service:
+                name: "ph-ee-connector-bulk"
+                port:
+                  number: 8443
+  deployment:
+    annotations:
+      deployTime: "{{ .Values.deployTime }}"
+
+    affinity: { }
+    nodeSelector: { }
+    tolerations: [ ]
+    envFrom: [ ]
+    # - configMapRef:
+    #     name: config-secret
+    extraEnvs: [ ]
+    # - User that the container will execute as.
+    # Not necessary to run as root (0) as the connector_bulk Deployment use cases do not need access to Kubernetes Node internals
+    # - Typically not necessarily unless running within environments such as OpenShift.
+    securityContext:
+      runAsUser: 0
+      privileged: false
+    resources:
+      limits:
+        memory: "512M"
+        cpu: "500m"
+      requests:
+        memory: "512M"
+        cpu: "100m"
+    # Allows you to add any config files in /usr/share/
+    # such as ph-ee-connector-bulk.yml for deployment
+    # ph-ee-connector-bulkConfig: {}
+    #   ph-ee-connector-bulk.yml: |
+
+
+
+  replicas: 1
+  imagePullPolicy: "Always"
+  camel_disable_ssl: true
+  channel:
+    hostname: ""
+  pollingApi:
+    timer: "180"
+  tenants: ""
+  config:
+    partylookup:
+      enable: false
+    approval:
+      enable: false
+    ordering:
+      enable: false
+      field: ""
+    splitting:
+      enable: true
+      sub_batch_size: 5
+    formatting:
+      enable: false
+      standard: "DEFAULT"
+    mergeback:
+      enable: true
+    backpressure:
+      enable: false
+    completion_threshold_check:
+      enable: true
+      completion_rate: 95
+    deduplication:
+      enabled: true
+  aws:
+    access_key: "root"
+    secret_key: "password"
+  livenessProbe:
+    httpGet:
+      path: /actuator/health/liveness
+      port: 9191
+    initialDelaySeconds: 120
+    periodSeconds: 30
+    failureThreshold: 3
+    timeoutSeconds: 5
+  readinessProbe:
+    httpGet:
+      path: /actuator/health/readiness
+      port: 9191
+    initialDelaySeconds: 120
+    periodSeconds: 30
+    failureThreshold: 3
+    timeoutSeconds: 5
+  # Whether this chart should self-manage its service account, role, and associated role binding.
+  managedServiceAccount: true
+  # Custom service account override that the pod will use
+  serviceAccount: ""
+  # Annotations to add to the ServiceAccount that is created if the serviceAccount value isn't set.
+  serviceAccountAnnotations: {}
+  # How long to wait for connector_bulk pods to stop gracefully
+  terminationGracePeriod: 30
+  # Extra environment variables for connector_bulk container.
+  envFrom: []
+  # - configMapRef:
+  #     name: config-secret
+  extraEnvs: []
+  # This is the PriorityClass settings as defined in
+  # https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/#priorityclass
+  priorityClassName: ""
+  # ph-ee-connector-bulkConfig: ""
+  #   ph-ee-connector-bulk.yml: |
+  # - User that the container will execute as.
+  # Not necessary to run as root (0) as the connector_bulk Deployment use cases do not need access to Kubernetes Node internals
+  # - Typically not necessarily unless running within environments such as OpenShift.
+  securityContext:
+    runAsUser: 0
+    privileged: false
+  resources:
+    limits:
+      memory: "512M"
+      cpu: "500m"
+    requests:
+      memory: "512M"
+      cpu: "100m"
+  service:
+    annotations:
+      konghq.com/protocol: "https"
