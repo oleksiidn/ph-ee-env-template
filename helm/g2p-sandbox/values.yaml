@@ -470,25 +470,36 @@ ph_ee_connector_mojaloop:
   # Enabling this will publicly expose your mojaloop instance.
   # Only enable this if you have security enabled on your cluster
 
+mockpayment:
+  enabled: true
+  ingress:
+    enabled: false
+    hosts:
+      - host: ""
+        paths:
+          - path: "/"
+            backend:
+              service:
+                name: ph-ee-connector-mock-payment-schema
+                port:
+                  number: 80
+  image: docker.io/openmf/ph-ee-connector-mock-payment-schema:v1.4.0
+  replicas: 1
+  mockFailure:
+    percentage: "0"
+  limits:
+    memory: "768M"
+    cpu: "500m"
+  requests:
+    memory: "256M"
+    cpu: "100m"
+  deployment:
+    annotations: {}
 
 ph-ee-engine:
 
 
-  mockpayment:
-    enabled: true 
-    limits:
-      memory: "768M"
-    ingress:
-        enabled: false
-        hosts:
-          - host: ""
-            paths:
-            - path: "/"
-              backend:
-                service:
-                  name: ph-ee-connector-mock-payment-schema
-                  port:
-                    number: 80
+
 
   channel:
     enabled: true
