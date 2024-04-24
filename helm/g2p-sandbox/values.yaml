@@ -253,8 +253,6 @@ kibana:
           name: kibana
           key: encryptionkey
 
-
-
 ph_ee_connector_ams_mifos:
   enabled: true
   image: docker.io/openmf/ph-ee-connector-ams-mifos:v1.7.0
@@ -356,38 +354,125 @@ ph_ee_connector_ams_mifos:
         # ph-ee-connector-ams-mifosConfig: {}
         #   ph-ee-connector-ams-mifos.yml: |
 
-ph-ee-engine:
-
-
-
-
-
-
-
-
-  ph_ee_connector_mojaloop:
-    enabled: true
-    image: docker.io/openmf/ph-ee-connector-mojaloop:v1.5.0
-    SPRING_PROFILES_ACTIVE: "bb"
-    hostname: "mojaloop.sandbox.mifos.io"
-    ingress:
-      enabled: false
-      annotations: 
-        kubernetes.io/ingress.class: nginx      
-      tls:
-        - secretName: sandbox-secret
-      hosts:
-        - host: mojaloop.sandbox.mifos.io          
-          paths: 
+ph_ee_connector_mojaloop:
+  enabled: true
+  image: docker.io/openmf/ph-ee-connector-mojaloop:v1.5.0
+  SPRING_PROFILES_ACTIVE: "bb"
+  hostname: "mojaloop.sandbox.mifos.io"
+  ingress:
+    enabled: false
+    annotations:
+      kubernetes.io/ingress.class: nginx
+    tls:
+      - secretName: sandbox-secret
+    hosts:
+      - host: mojaloop.sandbox.mifos.io
+        paths:
           - path: "/"
             backend:
               service:
                 name: ph-ee-connector-mojaloop-java
                 port:
-                  number: 80 
-    deployment:
-      annotations:
-        deployTime: "{{ .Values.deployTime }}"
+                  number: 80
+    path: "/"
+    backend: { }
+  deployment:
+    annotations:
+      deployTime: "{{ .Values.deployTime }}"
+    affinity: {}
+    nodeSelector: {}
+    tolerations: []
+    envFrom: []
+    # - configMapRef:
+    #     name: config-secret
+    extraEnvs: []
+    # - User that the container will execute as.
+    # Not necessary to run as root (0) as the mojaloop Deployment use cases do not need access to Kubernetes Node internals
+    # - Typically not necessarily unless running within environments such as OpenShift.
+    securityContext:
+      runAsUser: 0
+      privileged: false
+    resources:
+      limits:
+        memory: "512M"
+        cpu: "500m"
+      requests:
+        memory: "512M"
+        cpu: "100m"
+    # Allows you to add any config files in /usr/share/
+    # such as ph-ee-connector-mojaloop-java.yml for deployment
+    # ph-ee-connector-mojaloop-javaConfig: {}
+    #   ph-ee-connector-mojaloop-java.yml: |
+  replicas: 1
+  imagePullPolicy: "Always"
+  switch:
+    quotes:
+      host: ""
+      service: ""
+    als:
+      host: ""
+      service: ""
+    transfers:
+      host: ""
+      service: ""
+    transactions:
+      host: ""
+      service: ""
+    oracle:
+      host: ""
+  livenessProbe:
+    httpGet:
+      path: /actuator/health/liveness
+      port: 9191
+    initialDelaySeconds: 120
+    periodSeconds: 30
+    failureThreshold: 3
+    timeoutSeconds: 5
+  readinessProbe:
+    httpGet:
+      path: /actuator/health/readiness
+      port: 9191
+    initialDelaySeconds: 120
+    periodSeconds: 30
+    failureThreshold: 3
+    timeoutSeconds: 5
+  # Whether this chart should self-manage its service account, role, and associated role binding.
+  managedServiceAccount: true
+  # Custom service account override that the pod will use
+  serviceAccount: ""
+  # Annotations to add to the ServiceAccount that is created if the serviceAccount value isn't set.
+  serviceAccountAnnotations: {}
+  # How long to wait for mojaloop pods to stop gracefully
+  terminationGracePeriod: 30
+  # Extra environment variables for mojaloop container.
+  envFrom: []
+  # - configMapRef:
+  #     name: config-secret
+  extraEnvs: []
+  # This is the PriorityClass settings as defined in
+  # https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/#priorityclass
+  priorityClassName: ""
+  # ph-ee-connector-mojaloop-javaConfig: ""
+  #   ph-ee-connector-mojaloop-java.yml: |
+  # - User that the container will execute as.
+  # Not necessary to run as root (0) as the mojaloop Deployment use cases do not need access to Kubernetes Node internals
+  # - Typically not necessarily unless running within environments such as OpenShift.
+  securityContext:
+    runAsUser: 0
+    privileged: false
+  resources:
+    limits:
+      memory: "512M"
+      cpu: "500m"
+    requests:
+      memory: "512M"
+      cpu: "100m"
+  # Enabling this will publicly expose your mojaloop instance.
+  # Only enable this if you have security enabled on your cluster
+
+
+ph-ee-engine:
+
 
   mockpayment:
     enabled: true 
