@@ -26,6 +26,9 @@ secret:
 configmap:
   apiversion: "v1"
 
+operations:
+  enabled: true
+
 zeebe_ops:
   enabled: true
   image: docker.io/openmf/ph-ee-zeebe-ops:v1.2.0
@@ -192,64 +195,175 @@ elasticsearch:
           name: elastic-credentials
           key: password
 
+kibana:
+  enabled: true
+  readinessProbe:
+    initialDelaySeconds: 45
+    timeoutSeconds: 15
+    successThreshold: 1
+  protocol: http
+  ingress:
+    enabled: false
+    className: "nginx"
+    pathtype: "Prefix"
+    annotations: {}
+      # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+    hosts:
+      - host: analytics.sandbox.mifos.io
+        paths:
+          - path: /
+    #tls: []
+    #  - secretName: chart-example-tls
+    #    hosts:
+    #      - chart-example.local
+  imageTag: 7.16.3
+  fullnameOverride: "ph-ee-kibana"
+  elasticsearchHosts: "http://ph-ee-elasticsearch:9200/"
+  kibanaConfig:
+    kibana.yml: |
+      monitoring.enabled: false
+      xpack.encryptedSavedObjects.encryptionKey: 5f4dcc3b5aa765d61d8327deb882cf99
+      server.ssl:
+        enabled: false
+        key: /usr/share/kibana/config/certs/elastic-certificate.pem
+        certificate: /usr/share/kibana/config/certs/elastic-certificate.pem
+      xpack.security.encryptionKey: ${KIBANA_ENCRYPTION_KEY}
+      elasticsearch.ssl:
+        certificateAuthorities: /usr/share/kibana/config/certs/elastic-certificate.pem
+        verificationMode: certificate
+  secretMounts:
+    - name: elastic-certificate-pem
+      secretName: elastic-certificate-pem
+      path: /usr/share/kibana/config/certs
+  extraEnvs:
+    - name: 'ELASTICSEARCH_USERNAME'
+      valueFrom:
+        secretKeyRef:
+          name: elastic-credentials
+          key: username
+    - name: 'ELASTICSEARCH_PASSWORD'
+      valueFrom:
+        secretKeyRef:
+          name: elastic-credentials
+          key: password
+    - name: 'KIBANA_ENCRYPTION_KEY'
+      valueFrom:
+        secretKeyRef:
+          name: kibana
+          key: encryptionkey
 
-ph-ee-engine:
-  kibana:
-    enabled: true
-    readinessProbe:
-      initialDelaySeconds: 45
-      timeoutSeconds: 15
-      successThreshold: 1    
-    protocol: http
-    ingress:
-      enabled: false
-      className: "nginx"
-      pathtype: "Prefix"
-      annotations: {}
-        # kubernetes.io/ingress.class: nginx
-        # kubernetes.io/tls-acme: "true"       
-      hosts:
-        - host: analytics.sandbox.mifos.io
-          paths:
-            - path: /
-      #tls: []
-      #  - secretName: chart-example-tls
-      #    hosts:
-      #      - chart-example.local
-
-  operations:
-    enabled: true
 
 
-
-
-  ph_ee_connector_ams_mifos:
-    enabled: true
-    image: docker.io/openmf/ph-ee-connector-ams-mifos:v1.7.0
-    SPRING_PROFILES_ACTIVE: "fin12,bb"
-    ams_local_enabled: true
-    ams_local_interop_host: "https://fynams.sandbox.mifos.io/"
-    ams_local_account_host: "https://fynams.sandbox.mifos.io/"
-    ams_local_customer_host: "https://fynams.sandbox.mifos.io/"
-    ams_local_auth_host: "https://fynams.sandbox.mifos.io/"
-    ingress:
-      enabled: false
-      annotations: 
-        kubernetes.io/ingress.class: nginx
-      tls:
-        - secretName: sandbox-secret
-      hosts:
-        - host: ams-mifos.sandbox.mifos.io          
-          paths: 
+ph_ee_connector_ams_mifos:
+  enabled: true
+  image: docker.io/openmf/ph-ee-connector-ams-mifos:v1.7.0
+  SPRING_PROFILES_ACTIVE: "fin12,bb"
+  ams_local_enabled: true
+  ams_local_interop_host: "https://fynams.sandbox.mifos.io/"
+  ams_local_account_host: "https://fynams.sandbox.mifos.io/"
+  ams_local_customer_host: "https://fynams.sandbox.mifos.io/"
+  ams_local_auth_host: "https://fynams.sandbox.mifos.io/"
+  ingress:
+    enabled: false
+    annotations:
+      kubernetes.io/ingress.class: nginx
+    tls:
+      - secretName: sandbox-secret
+    hosts:
+      - host: ams-mifos.sandbox.mifos.io
+        paths:
           - path: "/"
             backend:
               service:
                 name: ph-ee-connector-ams-mifos
                 port:
-                  number: 80   
+                  number: 80
+  deployment:
+    annotations:
+      deployTime: "{{ .Values.deployTime }}"
+    replicas: 1
+    image: docker.io/openmf/ph-ee-connector-ams-mifos:v1.3.0
+    imagePullPolicy: "Always"
+    ams_local_enabled: true
+    ams_local_interop_host: "fineract-server"
+    ams_local_account_host: "fineract-server"
+    ams_local_customer_host: "fineract-server"
+    ams_local_auth_host: "fineract-server"
+    ams_local_tenants: ""
+    ams_local_loan_host: ""
+    # Whether this chart should self-manage its service account, role, and associated role binding.
+    managedServiceAccount: true
+    # Custom service account override that the pod will use
+    serviceAccount: ""
+    # Annotations to add to the ServiceAccount that is created if the serviceAccount value isn't set.
+    serviceAccountAnnotations: { }
+    # How long to wait for ams-mifos pods to stop gracefully
+    terminationGracePeriod: 180
+    # Extra environment variables for ams-mifos container.
+    envFrom: [ ]
+    # - configMapRef:
+    #     name: config-secret
+    extraEnvs: [ ]
+    # This is the PriorityClass settings as defined in
+    # https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/#priorityclass
+    priorityClassName: ""
+    # ph-ee-connector-ams-mifosConfig: ""
+    #   ph-ee-connector-ams-mifos.yml: |
+    # - User that the container will execute as.
+    # Not necessary to run as root (0) as the ams-mifos Deployment use cases do not need access to Kubernetes Node internals
+    # - Typically not necessarily unless running within environments such as OpenShift.
+    securityContext:
+      runAsUser: 0
+      privileged: false
+    resources:
+      limits:
+        memory: "384M"
+        cpu: "500m"
+      requests:
+        memory: "256M"
+        cpu: "300m"
+    # Enabling this will publicly expose your ams-mifos instance.
+    # Only enable this if you have security enabled on your cluster
+    ingress:
+      enabled: false
+      annotations: { }
+
     deployment:
-      annotations:
-        deployTime: "{{ .Values.deployTime }}"
+      annotations: { }
+      affinity: { }
+      nodeSelector: { }
+      tolerations: [ ]
+      envFrom: [ ]
+      # - configMapRef:
+      #     name: config-secret
+      extraEnvs: [ ]
+      # - User that the container will execute as.
+      # Not necessary to run as root (0) as the zeebeops Deployment use cases do not need access to Kubernetes Node internals
+      # - Typically not necessarily unless running within environments such as OpenShift.
+      securityContext:
+        runAsUser: 0
+        privileged: false
+      resources:
+        limits:
+          memory: "512M"
+          cpu: "500m"
+        requests:
+          memory: "512M"
+          cpu: "100m"
+        # Allows you to add any config files in /usr/share/
+        # such as ph-ee-connector-ams-mifos.yml for deployment
+        # ph-ee-connector-ams-mifosConfig: {}
+        #   ph-ee-connector-ams-mifos.yml: |
+
+ph-ee-engine:
+
+
+
+
+
+
+
 
   ph_ee_connector_mojaloop:
     enabled: true
