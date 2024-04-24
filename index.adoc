@@ -1,0 +1,31 @@
+= Notes
+
+== Deploy
+
+ helm upgrade --install  my-ph-ee-g2psandbox ./g2p-sandbox/  --create-namespace --namespace paymenthub
+
+=== Delete
+
+  helm delete my-ph-ee-g2psandbox -n paymenthub
+
+ kubectl delete namespace paymenthub
+
+
+
+set `SECURITY_JWS_ENABLE: false` into *ph-ee-connector-common* pod
+
+
+== Examples of requests
+
+https://mifos.gitbook.io/docs/payment-hub-ee/overview/bulk-disbursement-integration#id-1.-bulk-transfer
+
+== logs
+
+kubectl logs -n paymenthub my-ph-ee-g2psandbox-zeebe-gateway-57f6fb9dc5-7d4j6 > zeebe.log
+
+
+== Docker
+
+#  image: docker.io/openmf/ph-ee-bulk-processor:v1.9.0
+  image: docker.io/openmf/ph-ee-bulk-processor:v1.12.1
+#  image: docker.io/oleksiidn/mifos-bulk-processor:custom-1
