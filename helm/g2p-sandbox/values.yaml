@@ -486,6 +486,12 @@ ph-ee-engine:
   vouchers:
     enabled: true
     image: docker.io/openmf/ph-ee-vouchers:v1.3.1
+    livenessProbe:
+      initialDelaySeconds: 120
+      periodSeconds: 120
+    readinessProbe:
+      initialDelaySeconds: 120
+      periodSeconds: 120
     ingress:
       enabled: false
       annotations:
