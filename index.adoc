@@ -29,3 +29,8 @@ kubectl logs -n paymenthub my-ph-ee-g2psandbox-zeebe-gateway-57f6fb9dc5-7d4j6 > 
 #  image: docker.io/openmf/ph-ee-bulk-processor:v1.9.0
   image: docker.io/openmf/ph-ee-bulk-processor:v1.12.1
 #  image: docker.io/oleksiidn/mifos-bulk-processor:custom-1
+
+
+== Swagger
+
+https://app.swaggerhub.com/apis/myapi943/payment-hub_ap_is/1.0
