@@ -34,3 +34,7 @@ kubectl logs -n paymenthub my-ph-ee-g2psandbox-zeebe-gateway-57f6fb9dc5-7d4j6 > 
 == Swagger
 
 https://app.swaggerhub.com/apis/myapi943/payment-hub_ap_is/1.0
+
+== official release
+
+helm install my-ph-ee-g2psandbox g2p-sandbox-1-5/ph-ee-g2psandbox --version 1.5.0
