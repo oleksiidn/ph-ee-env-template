@@ -6,6 +6,12 @@ version: 0.0.0
 appVersion: 0.0.0
 
 dependencies:
+
+- name: redis
+  version: 17.9.3
+  repository: "https://charts.bitnami.com/bitnami"
+  condition: "redis.enabled"
+
 - name: zeebe_ops
   version: 1.0.0
   repository: "file://../ph-ee-engine/zeebe-ops"
