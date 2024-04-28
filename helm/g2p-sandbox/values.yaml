@@ -58,10 +58,10 @@ account_mapper:
     annotations:
       deployTime: "{{ .Values.deployTime }}"
     livenessProbe:
-      initialDelaySeconds: 20
+      initialDelaySeconds: 120
       periodSeconds: 30
     readinessProbe:
-      initialDelaySeconds: 20
+      initialDelaySeconds: 120
       periodSeconds: 30
   async:
     core_pool_size: 10
