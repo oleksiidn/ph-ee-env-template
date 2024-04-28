@@ -225,6 +225,72 @@ channel:
   # Enabling this will publicly expose your channel instance.
   # Only enable this if you have security enabled on your cluster
 
+elasticsearch:
+  enabled: true
+  #Single Node Solution
+  clusterHealthCheckParams: "wait_for_status=yellow&timeout=100s"
+  protocol: http
+  master:
+    readinessProbe:
+      httpGet:
+        allow-insecure: true
+        username: elastic
+        password: "{{ .Env.ELASTIC_PASSWORD }}"
+        path: /_cluster/health?wait_for_status=yellow&timeout=5s
+        port: 9200
+      initialDelaySeconds: 30
+  data:
+    readinessProbe:
+      httpGet:
+        allow-insecure: true
+        username: elastic
+        password: "{{ .Env.ELASTIC_PASSWORD }}"
+        path: /_cluster/health?wait_for_status=yellow&timeout=5s
+        port: 9200
+      initialDelaySeconds: 30
+  # Shrink default JVM heap.
+  esJavaOpts: "-Xmx512m -Xms512m"
+  # Allocate smaller chunks of memory per pod.
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "1024M"
+    limits:
+      cpu: "1000m"
+      memory: "1024M"
+  volumeClaimTemplate:
+    accessModes: [ "ReadWriteOnce" ]
+    storageClassName: "gp2"
+    resources:
+      requests:
+        storage: 10Gi
+
+  # imageTag: 7.17.1
+  replicas: 1
+  fullnameOverride: "ph-ee-elasticsearch"
+  clusterName: "ph-ee-elasticsearch"
+  minimumMasterNodes: 1
+  esConfig:
+    elasticsearch.yml: |
+      xpack.security.enabled: false
+      xpack.security.transport.ssl.enabled: false
+      xpack.security.transport.ssl.verification_mode: certificate
+      xpack.security.transport.ssl.keystore.path: /usr/share/elasticsearch/config/certs/elastic-certificates.p12
+      xpack.security.transport.ssl.truststore.path: /usr/share/elasticsearch/config/certs/elastic-certificates.p12
+      xpack.security.http.ssl.enabled: false
+      xpack.security.http.ssl.truststore.path: /usr/share/elasticsearch/config/certs/elastic-certificates.p12
+      xpack.security.http.ssl.keystore.path: /usr/share/elasticsearch/config/certs/elastic-certificates.p12
+  secretMounts:
+    - name: elastic-certificates
+      secretName: elastic-certificates
+      path: /usr/share/elasticsearch/config/certs
+  extraEnvs:
+    - name: ELASTIC_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: elastic-credentials
+          key: password
+
 kafka:
   enabled: true
   fullnameOverride: kafka
@@ -384,73 +450,6 @@ redis:
   enabled: true
   replica:
     replicaCount: 1
-
-
-elasticsearch:
-  enabled: true
-  #Single Node Solution
-  clusterHealthCheckParams: "wait_for_status=yellow&timeout=100s"
-  protocol: http
-  master:
-    readinessProbe:
-      httpGet:
-        allow-insecure: true
-        username: elastic
-        password: "{{ .Env.ELASTIC_PASSWORD }}"
-        path: /_cluster/health?wait_for_status=yellow&timeout=5s
-        port: 9200
-      initialDelaySeconds: 30
-  data:
-    readinessProbe:
-      httpGet:
-        allow-insecure: true
-        username: elastic
-        password: "{{ .Env.ELASTIC_PASSWORD }}"
-        path: /_cluster/health?wait_for_status=yellow&timeout=5s
-        port: 9200
-      initialDelaySeconds: 30
-  # Shrink default JVM heap.
-  esJavaOpts: "-Xmx512m -Xms512m"
-  # Allocate smaller chunks of memory per pod.
-  resources:
-    requests:
-      cpu: "100m"
-      memory: "1024M"
-    limits:
-      cpu: "1000m"
-      memory: "1024M"
-  volumeClaimTemplate:
-    accessModes: [ "ReadWriteOnce" ]
-    storageClassName: "gp2"
-    resources:
-      requests:
-        storage: 10Gi
-
-  # imageTag: 7.17.1
-  replicas: 1
-  fullnameOverride: "ph-ee-elasticsearch"
-  clusterName: "ph-ee-elasticsearch"
-  minimumMasterNodes: 1
-  esConfig:
-    elasticsearch.yml: |
-      xpack.security.enabled: false
-      xpack.security.transport.ssl.enabled: false
-      xpack.security.transport.ssl.verification_mode: certificate
-      xpack.security.transport.ssl.keystore.path: /usr/share/elasticsearch/config/certs/elastic-certificates.p12
-      xpack.security.transport.ssl.truststore.path: /usr/share/elasticsearch/config/certs/elastic-certificates.p12
-      xpack.security.http.ssl.enabled: false
-      xpack.security.http.ssl.truststore.path: /usr/share/elasticsearch/config/certs/elastic-certificates.p12
-      xpack.security.http.ssl.keystore.path: /usr/share/elasticsearch/config/certs/elastic-certificates.p12
-  secretMounts:
-    - name: elastic-certificates
-      secretName: elastic-certificates
-      path: /usr/share/elasticsearch/config/certs
-  extraEnvs:
-    - name: ELASTIC_PASSWORD
-      valueFrom:
-        secretKeyRef:
-          name: elastic-credentials
-          key: password
 
 kibana:
   enabled: true
