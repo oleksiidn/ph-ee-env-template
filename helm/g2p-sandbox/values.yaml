@@ -1577,6 +1577,21 @@ post_installation_job:
 
 minio:
   enabled: true
+  fullnameOverride: "minio"
+  resources:
+    requests:
+      memory: 256Mi
+  replicas: 1
+  persistence:
+    enabled: true
+    size: 10Gi
+  mode: standalone
+  rootUser: root
+  rootPassword: password
+  buckets:
+    - name: paymenthub-ee
+      policy: public
+
 
 account_mapper:
   enabled: true
