@@ -26,11 +26,11 @@ spec:
           imagePullPolicy: "{{ .Values.global.imagePullPolicy }}"
           resources:
             limits:
-              memory: "{{ .Values.limits.memory }}"
-              cpu: "{{ .Values.limits.cpu }}"
+              memory: "{{ .Values.resources.limits.memory }}"
+              cpu: "{{ .Values.resources.limits.cpu }}"
             requests:
-              memory: "{{ .Values.requests.memory }}"
-              cpu: "{{ .Values.requests.cpu }}"
+              memory: "{{ .Values.resources.requests.memory }}"
+              cpu: "{{ .Values.resources.requests.cpu }}"
           ports:
            - containerPort: 5000
           livenessProbe:
