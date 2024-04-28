@@ -100,6 +100,11 @@ dependencies:
   repository: https://codecentric.github.io/helm-charts
   condition: "keycloak.enabled"
 
+- name: kong
+  version: 2.13.1
+  repository: https://charts.konghq.com
+  condition: "kong.enabled"
+
 - name: importer_rdbms
   version: 1.0.0
   repository: "file://../ph-ee-engine/operations-importer-rdbms"
