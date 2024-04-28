@@ -1376,6 +1376,77 @@ integration_test:
   savings:
     base_url: ""
 
+billPay:
+  enabled: true
+  image: docker.io/openmf/ph-ee-bill-pay:v1.1.0
+  hostname: "bill-pay.sandbox.mifos.io"
+  stub_hostname: "bill-pay.sandbox.mifos.io"
+  SPRING_PROFILES_ACTIVE: "bb,tenants"
+  ingress:
+    enabled: false
+  deployment:
+    annotations:
+      deployTime: "{{ .Values.deployTime }}"
+    affinity: { }
+    nodeSelector: { }
+    tolerations: [ ]
+    envFrom: [ ]
+    # - configMapRef:
+    #     name: config-secret
+    extraEnvs: [ ]
+    # - User that the container will execute as.
+    # - Typically not necessarily unless running within environments such as OpenShift.
+  replicas: 1
+  imagePullPolicy: "Always"
+  livenessProbe:
+    httpGet:
+      path: /actuator/health/liveness
+      port: 8080
+      scheme: HTTPS
+    initialDelaySeconds: 120
+    periodSeconds: 30
+    failureThreshold: 3
+    timeoutSeconds: 5
+  readinessProbe:
+    httpGet:
+      path: /actuator/health/readiness
+      port: 8080
+      scheme: HTTPS
+    initialDelaySeconds: 120
+    periodSeconds: 30
+    failureThreshold: 3
+    timeoutSeconds: 5
+  # Whether this chart should self-manage its service account, role, and associated role binding.
+  managedServiceAccount: true
+  # Custom service account override that the pod will use
+  serviceAccount: "billPay"
+  # Annotations to add to the ServiceAccount that is created if the serviceAccount value isn't set.
+  serviceAccountAnnotations: {}
+  # How long to wait for pods to stop gracefully
+  terminationGracePeriod: 30
+  # Extra environment variables for container.
+  envFrom: []
+  # - configMapRef:
+  #     name: config-secret
+  extraEnvs: []
+  # This is the PriorityClass settings as defined in
+  # https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/#priorityclass
+  priorityClassName: ""
+  securityContext:
+    runAsUser: 0
+    privileged: false
+  resources:
+    limits:
+      memory: "512M"
+      cpu: "500m"
+    requests:
+      memory: "512M"
+      cpu: "100m"
+  service:
+    annotations: {}
+  # Only enable this if you have security enabled on your cluster
+
+
 
 ph-ee-engine:
 
@@ -1387,33 +1458,7 @@ ph-ee-engine:
 
 
 
-  billPay:
-    enabled: true
-    image: docker.io/openmf/ph-ee-bill-pay:v1.1.0
-    hostname: "bill-pay.sandbox.mifos.io"
-    stub_hostname: "bill-pay.sandbox.mifos.io"
-    SPRING_PROFILES_ACTIVE: "bb,tenants"
-    ingress:
-      enabled: false
-      annotations:
-        nginx.ingress.kubernetes.io/access-control-allow-origin: 'true'
-        nginx.ingress.kubernetes.io/cors-allow-methods: PUT, GET, POST, OPTIONS, DELETE
-        nginx.ingress.kubernetes.io/cors-allow-origin: '*'
-        nginx.ingress.kubernetes.io/enable-cors: 'true'
-      tls:
-        - secretName: sandbox-secret
-      hosts:
-        - host: bill-pay.sandbox.mifos.io
-          paths:
-            - path: "/"
-              backend:
-                service:
-                  name: "ph-ee-bill-pay"
-                  port:
-                    number: 8080
-    deployment:
-      annotations:
-        deployTime: "{{ .Values.deployTime }}"
+
 
   crm:
     enabled: true

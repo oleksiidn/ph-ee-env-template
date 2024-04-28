@@ -115,6 +115,11 @@ dependencies:
   repository: "file://../ph-ee-engine/vouchers"
   condition: "vouchers.enabled"
 
+- name: billPay
+  version: 1.0.0
+  repository: "file://../ph-ee-engine/connector-bill-pay"
+  condition: "billPay.enabled"
+
 - name: mysql
   version: 9.4.5
   repository: "https://charts.bitnami.com/bitnami"
