@@ -1634,6 +1634,12 @@ vouchers:
   deployment:
     annotations:
       deployTime: "{{ .Values.deployTime }}"
+    livenessProbe:
+      initialDelaySeconds: 120
+      periodSeconds: 30
+    readinessProbe:
+      initialDelaySeconds: 120
+      periodSeconds: 30
   spring:
     datasource:
       url: jdbc:mysql://operationsmysql:3306/voucher_management

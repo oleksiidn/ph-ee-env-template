@@ -72,3 +72,9 @@ deployment:
   apiVersion: "apps/v1"
   annotations:
     deployTime: "{{ .Values.deployTime }}"
+  livenessProbe:
+    initialDelaySeconds: 120
+    periodSeconds: 30
+  readinessProbe:
+    initialDelaySeconds: 120
+    periodSeconds: 30
