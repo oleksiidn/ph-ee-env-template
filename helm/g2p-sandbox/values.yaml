@@ -319,10 +319,10 @@ notifications:
     privileged: false
   resources:
     limits:
-      memory: "1024Mi"
+      memory: "1Gi"
       cpu: "500m"
     requests:
-      memory: "1024Mi"
+      memory: "1Gi"
       cpu: "100m"
   # Enabling this will publicly expose your notifications instance.
   # Only enable this if you have security enabled on your cluster
