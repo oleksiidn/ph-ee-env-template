@@ -38,13 +38,17 @@ kubectl logs -n paymenthub my-ph-ee-g2psandbox-zeebe-gateway-57f6fb9dc5-7d4j6 > 
 
 == Docker
 
-#  image: docker.io/openmf/ph-ee-bulk-processor:v1.9.0
-  image: docker.io/openmf/ph-ee-bulk-processor:v1.12.1
-#  image: docker.io/oleksiidn/mifos-bulk-processor:custom-1
-
-
 == Swagger
 
 https://app.swaggerhub.com/apis/myapi943/payment-hub_ap_is/1.0
 
 == Issue
+
+===  MountVolume.SetUp failed for volume "elastic-certificates" : secret "elastic-certificates" not found
+
+
+== Official package
+
+helm install my-ph-ee-g2psandbox g2p-sandbox-1-5/ph-ee-g2psandbox --version 1.5.0
+helm template my-ph-ee-g2psandbox g2p-sandbox-1-5/ph-ee-g2psandbox --version 1.5.0 --debug > official.yaml
+
