@@ -747,32 +747,115 @@ operations_app:
   # Enabling this will publicly expose your operations_app instance.
   # Only enable this if you have security enabled on your cluster
 
-
-ph-ee-engine:
-
-
-
-
-
-
-
-  operations_web:
-    enabled: true
-    image: docker.io/openmf/ph-ee-operations-web:v1.20.0
-    hostname: "ops.sandbox.mifos.io"
-    ingress:
-      enabled: false
-      tls:
-        - secretName: sandbox-secret
-      hosts:
-        - host: ops.sandbox.mifos.io          
-          paths: 
+operations_web:
+  enabled: true
+  image: docker.io/openmf/ph-ee-operations-web:v1.20.0
+  hostname: "ops.sandbox.mifos.io"
+  ingress:
+    enabled: false
+    tls:
+      - secretName: sandbox-secret
+    hosts:
+      - host: ops.sandbox.mifos.io
+        paths:
           - path: "/"
             backend:
               service:
                 name: "ph-ee-operations-web"
                 port:
                   number: 4200
+    replicas: 1
+    image: docker.io/openmf/ph-ee-operations-web:v1.10.0
+    imagePullPolicy: "Always"
+    imagePullSecrets: [ ]
+    webhost: ""
+    livenessProbe:
+      httpGet:
+        path: /actuator/health/liveness
+        port: 9191
+      initialDelaySeconds: 120
+      periodSeconds: 30
+      failureThreshold: 3
+      timeoutSeconds: 5
+    readinessProbe:
+      httpGet:
+        path: /actuator/health/readiness
+        port: 9191
+      initialDelaySeconds: 120
+      periodSeconds: 30
+      failureThreshold: 3
+      timeoutSeconds: 5
+    # Whether this chart should self-manage its service account, role, and associated role binding.
+    managedServiceAccount: true
+    # Custom service account override that the pod will use
+    serviceAccount: ""
+    # Annotations to add to the ServiceAccount that is created if the serviceAccount value isn't set.
+    serviceAccountAnnotations: { }
+    # How long to wait for operations_web pods to stop gracefully
+    terminationGracePeriod: 30
+    # Extra environment variables for operations_web container.
+    envFrom: [ ]
+    # - configMapRef:
+    #     name: config-secret
+    extraEnvs: [ ]
+    # This is the PriorityClass settings as defined in
+    # https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/#priorityclass
+    priorityClassName: ""
+    # ph-ee-operations-web-configConfig: ""
+    #   ph-ee-operations-web-config.yml: |
+    # - User that the container will execute as.
+    # Not necessary to run as root (0) as the operations_web Deployment use cases do not need access to Kubernetes Node internals
+    # - Typically not necessarily unless running within environments such as OpenShift.
+    securityContext:
+      runAsUser: 0
+      privileged: false
+    resources:
+      limits:
+        memory: "512M"
+        cpu: "500m"
+      requests:
+        memory: "512M"
+        cpu: "100m"
+    # Enabling this will publicly expose your operations_web instance.
+    # Only enable this if you have security enabled on your cluster
+    ingress:
+      enabled: false
+      path: "/"
+      annotations: { }
+      backend: { }
+    deployment:
+      config:
+        - name: ph-ee-operations-web-config
+          mountPath: "/usr/share/nginx/html/assets/configuration.properties"
+          subPath: "configuration.properties"
+      annotations: { }
+      affinity: { }
+      nodeSelector: { }
+      tolerations: [ ]
+      envFrom: [ ]
+      # - configMapRef:
+      #     name: config-secret
+      extraEnvs: [ ]
+      # - User that the container will execute as.
+      # Not necessary to run as root (0) as the operation-web Deployment use cases do not need access to Kubernetes Node internals
+      # - Typically not necessarily unless running within environments such as OpenShift.
+      securityContext:
+        runAsUser: 0
+        privileged: false
+      resources:
+        limits:
+          memory: "512M"
+          cpu: "500m"
+        requests:
+          memory: "512M"
+          cpu: "100m"
+            # Allows you to add any config files in /usr/share/
+            # such as ph-ee-operations-web.yml for deployment
+            # ph-ee-operations-webConfig: {}
+          #   ph-ee-operations-web.yml: |
+
+ph-ee-engine:
+
 
   identity:
     hostname: "ops-bk.sandbox.mifos.io"
