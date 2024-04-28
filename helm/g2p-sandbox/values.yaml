@@ -1572,18 +1572,11 @@ ph-ee-connector:
       deployTime: "{{ .Values.deployTime }}"
   replicas: 1
 
+post_installation_job:
+  enabled: true
 
-
-ph-ee-engine:
-
-
-
-
-
-  post_installation_job:
-    enabled: true
-  minio:
-    enabled: true
+minio:
+  enabled: true
 
 account_mapper:
   enabled: true
