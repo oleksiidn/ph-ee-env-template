@@ -51,6 +51,11 @@ dependencies:
   repository: "file://../ph-ee-engine/operations-app"
   condition: "operations_app.enabled"
 
+- name: ph_ee_connector_gsma
+  version: 1.0.0
+  repository: "file://../ph-ee-engine/connector-gsma"
+  condition: "ph_ee_connector_gsma.enabled"
+
 - name: operations_web
   version: 1.0.0
   repository: "file://../ph-ee-engine/operations-web"

@@ -857,25 +857,83 @@ operations_web:
 identity:
   hostname: "ops-bk.sandbox.mifos.io"
 
+ph_ee_connector_gsma:
+  enabled: true
+  image: docker.io/openmf/ph-ee-connector-gsma:v1.3.0
+  SPRING_PROFILES_ACTIVE: "bb"
+  limits:
+    cpu: "500m"
+    memory: "512M"
+  requests:
+    cpu: "100m"
+    memory: "256M"
+  deployment:
+    annotations:
+      deployTime: "{{ .Values.deployTime }}"
+    affinity: { }
+    nodeSelector: { }
+    tolerations: [ ]
+    envFrom: [ ]
+    # - configMapRef:
+    #     name: config-secret
+    extraEnvs: [ ]
+    # - User that the container will execute as.
+    # Not necessary to run as root (0) as the gsma Deployment use cases do not need access to Kubernetes Node internals
+    # - Typically not necessarily unless running within environments such as OpenShift.
+    securityContext:
+      runAsUser: 0
+      privileged: false
+    resources:
+      limits:
+        memory: "512M"
+        cpu: "500m"
+      requests:
+        memory: "512M"
+        cpu: "100m"
+    # Allows you to add any config files in /usr/share/
+    # such as ph_ee_connector_gsma.yml for deployment
+    # ph_ee_connector_gsmaConfig: {}
+    #   ph_ee_connector_gsma.yml: |
+
+  replicas: 1
+  imagePullPolicy: "Always"
+  # Whether this chart should self-manage its service account, role, and associated role binding.
+  managedServiceAccount: true
+  # Custom service account override that the pod will use
+  serviceAccount: ""
+  # Annotations to add to the ServiceAccount that is created if the serviceAccount value isn't set.
+  serviceAccountAnnotations: {}
+  # How long to wait for gsma pods to stop gracefully
+  terminationGracePeriod: 30
+  # Extra environment variables for gsma container.
+  envFrom: []
+  # - configMapRef:
+  #     name: config-secret
+  extraEnvs: []
+  # This is the PriorityClass settings as defined in
+  # https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/#priorityclass
+  priorityClassName: ""
+  # ph_ee_connector_gsmaConfig: ""
+  #   ph_ee_connector_gsma.yml: |
+  # - User that the container will execute as.
+  # Not necessary to run as root (0) as the gsma Deployment use cases do not need access to Kubernetes Node internals
+  # - Typically not necessarily unless running within environments such as OpenShift.
+  securityContext:
+    runAsUser: 0
+    privileged: false
+  resources:
+    limits:
+      memory: "512M"
+      cpu: "500m"
+    requests:
+      memory: "512M"
+      cpu: "100m"
+
+
 ph-ee-engine:
 
 
-  identity:
-    hostname: "ops-bk.sandbox.mifos.io"
 
-  ph_ee_connector_gsma:
-    enabled: true
-    image: docker.io/openmf/ph-ee-connector-gsma:v1.3.0
-    SPRING_PROFILES_ACTIVE: "bb"
-    limits:
-      cpu: "500m"
-      memory: "512M"
-    requests:
-      cpu: "100m"
-      memory: "256M"
-    deployment:
-      annotations:
-        deployTime: "{{ .Values.deployTime }}"
 
   ph_ee_connector_slcb:
     enabled: false
