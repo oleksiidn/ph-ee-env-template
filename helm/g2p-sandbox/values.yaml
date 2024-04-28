@@ -320,10 +320,10 @@ notifications:
   resources:
     limits:
       memory: "1Gi"
-      cpu: "500m"
+      cpu: "1000m"
     requests:
       memory: "1Gi"
-      cpu: "100m"
+      cpu: "500m"
   # Enabling this will publicly expose your notifications instance.
   # Only enable this if you have security enabled on your cluster
 
