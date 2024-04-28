@@ -1336,6 +1336,47 @@ keycloak:
 kong:
   enabled: false
 
+integration_test:
+  enabled: true
+  gradle:
+    command: ./gradlew test -Dcucumber.filter.tags="@gov"
+  replicas: 1
+  image: "docker.io/openmf/ph-ee-integration-test:latest"
+  imageTag: v1.4.0-rc.1
+  imagePullPolicy: "Never"
+  limits:
+    cpu: "500m"
+    memory: "3Gi"
+  requests:
+    cpu: "100m"
+    memory: "2Gi"
+  operations_app:
+    contactpoint: "http://ph-ee-operations-app:80"
+  bulk_processor:
+    contactpoint: "https://ph-ee-connector-bulk:8443"
+  channel_connector:
+    contactpoint: "https://ph-ee-connector-channel:8443"
+  kafka:
+    brokers: ""
+    topics: ""
+    consumerTimeoutMs: ""
+  zeebe_operations:
+    contactpoint: ""
+    no_of_workflows: ""
+    thread-count: ""
+  max_retry_count: ""
+  retry_intervals: ""
+  defaults:
+    tenant: ""
+    authorization: ""
+  channel:
+    base_url: ""
+  loan:
+    base_url: ""
+  savings:
+    base_url: ""
+
+
 ph-ee-engine:
 
 
@@ -1343,41 +1384,8 @@ ph-ee-engine:
     
 
 
-  vouchers:
-    enabled: true
-    image: docker.io/openmf/ph-ee-vouchers:v1.3.1
-    livenessProbe:
-      initialDelaySeconds: 120
-      periodSeconds: 120
-    readinessProbe:
-      initialDelaySeconds: 120
-      periodSeconds: 120
-    ingress:
-      enabled: false
-      annotations:
-        nginx.ingress.kubernetes.io/access-control-allow-origin: 'true'
-        nginx.ingress.kubernetes.io/cors-allow-headers: 'x-registering-institution-id, content-type, X-CallbackURL'
-        nginx.ingress.kubernetes.io/cors-allow-methods: PUT, GET, POST, OPTIONS, DELETE
-        nginx.ingress.kubernetes.io/cors-allow-origin: '*'
-        nginx.ingress.kubernetes.io/enable-cors: 'true'
-      tls:
-        - secretName: sandbox-secret
-      hosts:
-        - host: vouchers.sandbox.mifos.io
-          paths:
-            - path: "/"
-              backend:
-                service:
-                  name: ph-ee-vouchers
-                  port:
-                    number: 80
-    deployment:
-      annotations:
-        deployTime: "{{ .Values.deployTime }}"
-  integration_test:
-    enabled: true
-    gradle:
-      command: ./gradlew test -Dcucumber.filter.tags="@gov"
+
+
 
   billPay:
     enabled: true
