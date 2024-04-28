@@ -752,6 +752,12 @@ mockpayment:
     cpu: "100m"
   deployment:
     annotations: {}
+  livenessProbe:
+    initialDelaySeconds: 120
+    periodSeconds: 30
+  readinessProbe:
+    initialDelaySeconds: 120
+    periodSeconds: 30
 
 
 operations_app:
