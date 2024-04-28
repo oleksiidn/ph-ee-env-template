@@ -125,6 +125,11 @@ dependencies:
   repository: "file://../ph-ee-engine/connector-crm"
   condition: "crm.enabled"
 
+- name: ph-ee-connector
+  version: 1.0.0
+  repository: "file://../ph-ee-engine/connector-ph-ee-bulk"
+  condition: "ph-ee-connector.enabled"
+
 - name: mysql
   version: 9.4.5
   repository: "https://charts.bitnami.com/bitnami"
