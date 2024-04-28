@@ -85,6 +85,10 @@ dependencies:
   repository: "file://../ph-ee-engine/connector-notifications"
   condition: "notifications.enabled"
 
+- name: messagegateway
+  version: 1.0.0
+  repository: "file://../ph-ee-engine/message-gateway"
+  condition: "messagegateway.enabled"
 
 - name: vouchers
   version: 1.0.0

@@ -1053,6 +1053,123 @@ notifications:
   # Enabling this will publicly expose your notifications instance.
   # Only enable this if you have security enabled on your cluster
 
+messagegateway:
+  enabled: true
+  image: docker.io/openmf/message-gateway:v1.2.0
+  secret:
+    value:
+      api_key: "<api_key>"
+      project_id: "<project_id>"
+    name: ""
+    key:
+      telerivet_api_key: ""
+  hostname: "messagegateway.sandbox.mifos.io"
+  ingress:
+    enabled: false
+    annotations:
+      kubernetes.io/ingress.class: nginx
+    tls:
+      - secretName: sandbox-secret
+    hosts:
+      - host: messagegateway.sandbox.mifos.io
+        paths:
+          - path: "/"
+            backend:
+              service:
+                name: "message-gateway"
+                port:
+                  number: 80
+    path: "/messages"
+    backend: { }
+
+  deployment:
+    annotations:
+      deployTime: "{{ .Values.deployTime }}"
+    affinity: { }
+    nodeSelector: { }
+    tolerations: [ ]
+    envFrom: [ ]
+    # - configMapRef:
+    #     name: config-secret
+    extraEnvs: [ ]
+    # - User that the container will execute as.
+    # Not necessary to run as root (0) as the message-gateway Deployment use cases do not need access to Kubernetes Node internals
+    # - Typically not necessarily unless running within environments such as OpenShift.
+    securityContext:
+      runAsUser: 0
+      privileged: false
+    resources:
+      limits:
+        memory: "512M"
+        cpu: "500m"
+      requests:
+        memory: "512M"
+        cpu: "100m"
+    # Allows you to add any config files in /usr/share/
+    # such as message-gateway.yml for deployment
+    # message-gatewayConfig: {}
+    #   message-gateway.yml: |
+
+
+  replicas: 1
+  imagePullPolicy: "Always"
+  CALLBACKCONFIG_HOST: "ph-ee-connector-notifications"
+  HOSTCONFIG_HOST: "message-gateway"
+  MYSQL_USERNAME: "mifos"
+  MYSQL_PASSWORD: "password"
+  DATASOURCE_URL: jdbc:mysql:thin://operationsmysql:3306/messagegateway
+  PROVIDERSOURCE_FROMDATABASE: "disabled"
+  PROVIDERSOURCE_FROMYML: "enabled"
+  livenessProbe:
+    httpGet:
+      path: /actuator/health/liveness
+      port: 9191
+    initialDelaySeconds: 120
+    periodSeconds: 30
+    failureThreshold: 3
+    timeoutSeconds: 5
+  readinessProbe:
+    httpGet:
+      path: /actuator/health/readiness
+      port: 9191
+    initialDelaySeconds: 120
+    periodSeconds: 30
+    failureThreshold: 3
+    timeoutSeconds: 5
+  # Whether this chart should self-manage its service account, role, and associated role binding.
+  managedServiceAccount: true
+  # Custom service account override that the pod will use
+  serviceAccount: ""
+  # Annotations to add to the ServiceAccount that is created if the serviceAccount value isn't set.
+  serviceAccountAnnotations: {}
+  # How long to wait for message-gateway pods to stop gracefully
+  terminationGracePeriod: 30
+  # Extra environment variables for message-gateway container.
+  envFrom: []
+  # - configMapRef:
+  #     name: config-secret
+  extraEnvs: []
+  # This is the PriorityClass settings as defined in
+  # https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/#priorityclass
+  priorityClassName: ""
+  # ph-ee-message-gatewayConfig: ""
+  #   ph-ee-message-gateway.yml: |
+  # - User that the container will execute as.
+  # Not necessary to run as root (0) as the message-gateway Deployment use cases do not need access to Kubernetes Node internals
+  # - Typically not necessarily unless running within environments such as OpenShift.
+  securityContext:
+    runAsUser: 0
+    privileged: false
+  resources:
+    limits:
+      memory: "512M"
+      cpu: "500m"
+    requests:
+      memory: "512M"
+      cpu: "100m"
+  # Enabling this will publicly expose your message-gateway instance.
+  # Only enable this if you have security enabled on your cluster
+
 
 
 ph-ee-engine:
@@ -1065,55 +1182,8 @@ ph-ee-engine:
 
 
 
-  zeebe_ops:
-    enabled: true
-    image: docker.io/openmf/ph-ee-zeebe-ops:v1.4.0
-    hostname: "zeebeops.sandbox.mifos.io"
-    ingress:
-      enabled: false
-      annotations: 
-        kubernetes.io/ingress.class: nginx  
-      tls:
-        - secretName: sandbox-secret
-      hosts:
-        - host: zeebeops.sandbox.mifos.io          
-          paths: 
-          - path: "/"
-            backend:
-              service:
-                name: "ph-ee-zeebe-ops"
-                port:
-                  number: 80 
-    deployment:
-      annotations:
-        deployTime: "{{ .Values.deployTime }}"
 
-  messagegateway:
-    enabled: true
-    image: docker.io/openmf/message-gateway:v1.2.0
-    secret:
-      value:
-        api_key: "<api_key>"
-        project_id: "<project_id>"
-    hostname: "messagegateway.sandbox.mifos.io"
-    ingress:
-      enabled: false
-      annotations: 
-        kubernetes.io/ingress.class: nginx  
-      tls:
-        - secretName: sandbox-secret
-      hosts:
-        - host: messagegateway.sandbox.mifos.io       
-          paths: 
-          - path: "/"
-            backend:
-              service:
-                name: "message-gateway"
-                port:
-                  number: 80   
-    deployment:
-      annotations:
-        deployTime: "{{ .Values.deployTime }}"                           
+
 
   importer_es:
     enabled: true
