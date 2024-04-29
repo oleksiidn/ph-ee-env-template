@@ -155,3 +155,7 @@ dependencies:
 - name: account_mapper
   version: 1.0.0
   repository: "file://../identity-account-mapper/account-mapper"
+
+- name: post_installation_job
+  version: 1.0.0
+  repository: "file://../ph-ee-engine/elastic-secret"

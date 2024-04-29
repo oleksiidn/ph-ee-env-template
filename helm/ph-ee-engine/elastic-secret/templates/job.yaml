@@ -1,4 +1,4 @@
-{{- if .Values.post_installation_job.enabled }}
+{{- if .Values.enabled }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -26,10 +26,11 @@ spec:
         - |
           #!/bin/bash
 
-          echo 'sandbox-custom-helm job'
           # Install required dependencies
           apt-get update
           apt install sudo
+          /bin/sh: 21: sudo: not found
+
           # sudo apt-get update
           sudo apt-get --assume-yes install apt-transport-https ca-certificates curl gnupg lsb-release
       
