@@ -260,7 +260,7 @@ elasticsearch:
       memory: "1024M"
   volumeClaimTemplate:
     accessModes: [ "ReadWriteOnce" ]
-    storageClassName: "gp2"
+#    storageClassName: "gp2"
     resources:
       requests:
         storage: 10Gi
