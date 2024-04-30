@@ -7,6 +7,11 @@ appVersion: 0.0.0
 
 dependencies:
 
+- name: camunda-platform
+  repository: https://helm.camunda.io
+  version: 8.2.12
+  condition: "camunda-platform-helm.enabled"
+
 - name: kafka
   version: 25.0.0
   repository: "https://charts.bitnami.com/bitnami"
