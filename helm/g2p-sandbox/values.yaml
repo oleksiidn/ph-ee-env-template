@@ -1712,6 +1712,7 @@ camunda-platform:
     enabled: false
 
 vouchers:
+  LOGGING_LEVEL_ROOT: "DEBUG"
   enabled: true
   paymentadvice: false
   replicas: 1
@@ -1735,10 +1736,10 @@ vouchers:
     annotations:
       deployTime: "{{ .Values.deployTime }}"
     livenessProbe:
-      initialDelaySeconds: 120
+      initialDelaySeconds: 420
       periodSeconds: 30
     readinessProbe:
-      initialDelaySeconds: 120
+      initialDelaySeconds: 420
       periodSeconds: 30
   spring:
     datasource:
