@@ -1735,12 +1735,6 @@ vouchers:
   deployment:
     annotations:
       deployTime: "{{ .Values.deployTime }}"
-    livenessProbe:
-      initialDelaySeconds: 420
-      periodSeconds: 30
-    readinessProbe:
-      initialDelaySeconds: 420
-      periodSeconds: 30
   spring:
     datasource:
       url: jdbc:mysql://operationsmysql:3306/voucher_management
@@ -1804,6 +1798,7 @@ connector_bulk:
   image: docker.io/openmf/ph-ee-bulk-processor:v1.12.1
   tenant: "rhino,gorilla"
   hostname: bulk-connector.sandbox.mifos.io
+  SECURITY_JWS_ENABLE: false
   operations_app:
     contactpoint: "http://ph-ee-operations-app:80"
     endpoints:

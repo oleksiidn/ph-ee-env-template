@@ -38,10 +38,6 @@ kubectl logs -n paymenthub ph-ee-connector-bulk-5db9c6d998-29nnt > log.log
 
 https://app.swaggerhub.com/apis/myapi943/payment-hub_ap_is/1.0
 
-== Issue
-
-===  MountVolume.SetUp failed for volume "elastic-certificates" : secret "elastic-certificates" not found
-
 
 == Official package
 
@@ -136,8 +132,6 @@ value: "false"
 
 ----
 
-
-
 == Issues
 
 === Process definition not found
@@ -149,3 +143,5 @@ value: "false"
     "responseDescription": "Process definition not found"
 }
 ----
+
+Absence of BPMN is the reason of this issue
