@@ -24,17 +24,13 @@
 
 
 
-set `SECURITY_JWS_ENABLE: false` into *ph-ee-connector-common* pod
-
-
 == Examples of requests
 
 https://mifos.gitbook.io/docs/payment-hub-ee/overview/bulk-disbursement-integration#id-1.-bulk-transfer
 
 == logs
 
-kubectl logs -n paymenthub my-ph-ee-g2psandbox-zeebe-gateway-57f6fb9dc5-7d4j6 > zeebe.log
-
+kubectl logs -n paymenthub ph-ee-connector-bulk-5db9c6d998-29nnt > log.log
 
 == Docker
 
@@ -49,6 +45,107 @@ https://app.swaggerhub.com/apis/myapi943/payment-hub_ap_is/1.0
 
 == Official package
 
-helm install my-ph-ee-g2psandbox g2p-sandbox-1-5/ph-ee-g2psandbox --version 1.5.0
+helm install my-ph-ee-g2psandbox g2p-sandbox-1-5/ph-ee-g2psandbox --version 1.5.0  --create-namespace --namespace paymenthub
+
 helm template my-ph-ee-g2psandbox g2p-sandbox-1-5/ph-ee-g2psandbox --version 1.5.0 --debug > official.yaml
 
+== Post Deployment Steps
+The Post_installation_Job is automated through a Kubernetes job in the helm chart. it will create secrets for ElasticSearch and Kibana. and Upload the BPMN. However, The following steps can be used to create Secrets and upload BPMN Manually.
+
+=== Create the required secrets
+
+==== Elasticsearch and Kibana
+Use https://github.com/openMF/ph-ee-env-labs/tree/master/helm/es-secret and https://github.com/openMF/ph-ee-env-labs/tree/master/helm/kibana-secret you can create a secret for Elasticsearch and Kibana. The command used to create a secret is
+
+1. auth
+2. make secrets NAMESPACE=paymenthub
+
+==== Bulk-processor
+Also to create a bulk-processor secret you can refer to CircleCI steps from config.yaml- https://github.com/openMF/ph-ee-env-labs/blob/master/.circleci/config.yml
+
+=== Upload BPMN
+https://mifos.gitbook.io/docs/payment-hub-ee/overview/installation-instructions/configuration-instructions/deploy-bpmns-with-multiple-dfsp-ids
+
+
+1. The Payment Hub EE business logic is always driven by the BPMN workflows included in the git repositories. It's not only possible but often necessary to customize these flows to meet the business requirements of a specific environment.
+
+2. Deploying the workflows to the K8S cluster is a separate step, which can be done either manually for each business flow, or using a shell script like this (actual example from the project's CI server):
+
+3. In the below example tenants are picked up from the array declared and for N number of tenants the script will run for N number of times and Internal field separator will convert array into string and store in $t.
+
+4. Zeebe command line tools (the zbctl binary) are also required for deploying the BPMN workflows if Zeebe Operations service is not deployed. This is part of the Zeebe releases and can be downloaded from the Zeebe release page at https://github.com/zeebe-io/zeebe/releases.
+
+5. BPMN deployment should be done with corresponding release version which can be obtained from release notes
+
+6. In the below script HOST should be replaced with the zeebe ops(port-forwarded) url from your cluster.
+
+[source, bash]
+----
+#!/bin/sh
+HOST="https://zeebeops.sandbox.fynarfin.io/zeebe/upload"
+
+deploy(){
+    cmd="curl --insecure --location --request POST $HOST \
+    --header 'Platform-TenantId: $2' \
+    --form 'file=@\"$PWD/$1\"'"
+    echo $cmd
+    eval $cmd
+    # If curl response is not 200, it should fail the eval cmd
+}
+
+TENANTS="gorilla,lion,rhino"
+IFS=',' read -ra TENANT_ARRAY <<< "$TENANTS"
+
+for t in "${TENANT_ARRAY[@]}"; do
+    LOC="orchestration/feel/*.bpmn"
+    for f in $LOC; do
+        # Check if "DFSPID" is present in the filename
+        if echo "$f" | grep -q "DFSPID"; then
+            # Replace "DFSPID" with the current tenant value in the filename
+            new_file_name=$(echo "$f" | sed "s/DFSPID/$t/")
+        else
+            # If "DFSPID" is not present, use the original name
+            new_file_name="$f"
+        fi
+        deploy "$new_file_name" "$t"
+    done
+
+    LOC2="orchestration/feel/example/*.bpmn"
+    for f in $LOC2; do
+        # Check if "DFSPID" is present in the filename
+        if echo "$f" | grep -q "DFSPID"; then
+            # Replace "DFSPID" with the current tenant value in the filename
+            new_file_name=$(echo "$f" | sed "s/DFSPID/$t/")
+        else
+            # If "DFSPID" is not present, use the original name
+            new_file_name="$f"
+        fi
+        deploy "$new_file_name" "$t"
+    done
+done
+----
+
+=== turn off SECURITY_JWS_ENABLE
+
+Update config of *ph-ee-connector-common* or *ph-ee-connector-bulk* pod
+
+[source,yaml]
+----
+- name: SECURITY_JWS_ENABLE
+value: "false"
+
+----
+
+
+
+== Issues
+
+=== Process definition not found
+
+[,json]
+----
+{
+    "responseCode": "01",
+    "responseDescription": "Process definition not found"
+}
+----
