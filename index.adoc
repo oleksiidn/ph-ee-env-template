@@ -77,23 +77,22 @@ https://mifos.gitbook.io/docs/payment-hub-ee/overview/installation-instructions/
 
 [source, bash]
 ----
-#!/bin/sh
-HOST="https://zeebeops.sandbox.fynarfin.io/zeebe/upload"
+#!/bin/bash
+HOST="http://localhost:5000/zeebe/upload"
 
 deploy(){
     cmd="curl --insecure --location --request POST $HOST \
     --header 'Platform-TenantId: $2' \
     --form 'file=@\"$PWD/$1\"'"
-    echo $cmd
-    eval $cmd
-    # If curl response is not 200, it should fail the eval cmd
+    echo "$cmd"
+    eval "$cmd"
 }
 
 TENANTS="gorilla,lion,rhino"
 IFS=',' read -ra TENANT_ARRAY <<< "$TENANTS"
 
 for t in "${TENANT_ARRAY[@]}"; do
-    LOC="orchestration/feel/*.bpmn"
+    LOC="feel/*.bpmn"
     for f in $LOC; do
         # Check if "DFSPID" is present in the filename
         if echo "$f" | grep -q "DFSPID"; then
@@ -106,7 +105,7 @@ for t in "${TENANT_ARRAY[@]}"; do
         deploy "$new_file_name" "$t"
     done
 
-    LOC2="orchestration/feel/example/*.bpmn"
+    LOC2="feel/example/*.bpmn"
     for f in $LOC2; do
         # Check if "DFSPID" is present in the filename
         if echo "$f" | grep -q "DFSPID"; then
@@ -144,4 +143,7 @@ value: "false"
 }
 ----
 
-Absence of BPMN is the reason of this issue
+
+== get Transactions
+
+http://ph-ee-operations-app:5000/api/v1/batches?page=0&size=10&sortOrder=asc&orderBy=requestFile&Platform-TenantId=gorilla
