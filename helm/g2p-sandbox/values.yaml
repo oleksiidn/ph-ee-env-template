@@ -1799,6 +1799,7 @@ connector_bulk:
   tenant: "rhino,gorilla"
   hostname: bulk-connector.sandbox.mifos.io
   SECURITY_JWS_ENABLE: false
+  SERVER_PORT: 8080
   operations_app:
     contactpoint: "http://ph-ee-operations-app:80"
     endpoints:

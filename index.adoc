@@ -120,6 +120,8 @@ for t in "${TENANT_ARRAY[@]}"; do
 done
 ----
 
+=== Change port for bulk connector from 8443 to 8080
+
 === turn off SECURITY_JWS_ENABLE
 
 Update config of *ph-ee-connector-common* or *ph-ee-connector-bulk* pod
@@ -128,7 +130,10 @@ Update config of *ph-ee-connector-common* or *ph-ee-connector-bulk* pod
 ----
 - name: SECURITY_JWS_ENABLE
 value: "false"
-
+- name: SERVER_PORT
+value: "8080"
+- name: SERVER_SSL_ENABLED
+value: "false"
 ----
 
 == Issues
